@@ -1,0 +1,14 @@
+type Campaign {
+  id: Int!
+  user_id: Int!
+  name: String!
+  short_description: String!
+  image_url: String!
+  goal_amount: Int!
+  current_amount: Int!
+  slug: String!
+}
+
+type Query {
+  campaigns(user_id: Int): [Campaign!]!
+}

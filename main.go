@@ -4,20 +4,22 @@ import (
 	"crowdfund-go/auth"
 	"crowdfund-go/campaign"
 	"crowdfund-go/config"
+	"crowdfund-go/graph"
+	"crowdfund-go/graph/generated"
 	"crowdfund-go/handler"
-	"crowdfund-go/helper"
 	"crowdfund-go/user"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"strings"
 
+	gqlHandler "github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
+
+const defaultPort = ":8080"
 
 func init() {
 	config.SetConfiguration()
@@ -32,7 +34,6 @@ func main() {
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPasskey, dbHost, dbPort, dbName)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,54 +55,29 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
-	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
+	api.POST("/avatars", auth.Middleware(authService, userService), userHandler.UploadAvatar)
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
-	api.POST("/campaigns", authMiddleware(authService, userService), campaignHandler.CreateCampaign)
+	api.POST("/campaigns", auth.Middleware(authService, userService), campaignHandler.CreateCampaign)
+
+	router.POST("/query", graphqlHandler(db))
+	router.GET("/", playgroundHandler())
 
 	router.Run()
 }
 
-func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
+func graphqlHandler(db *gorm.DB) gin.HandlerFunc {
+	h := gqlHandler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db}}))
+
 	return func(c *gin.Context) {
-		header := c.GetHeader("Authorization")
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
 
-		if !strings.Contains(header, "Bearer") {
-			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-			return
-		}
+func playgroundHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL", "/query")
 
-		tokenHeader := ""
-		spltdHeader := strings.Split(header, " ")
-		if len(spltdHeader) == 2 {
-			tokenHeader = spltdHeader[1]
-		}
-
-		token, err := authService.ValidateToken(tokenHeader)
-		if err != nil {
-			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-			return
-		}
-
-		claim, ok := token.Claims.(jwt.MapClaims)
-
-		if !ok || !token.Valid {
-			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-			return
-		}
-
-		userID := int(claim["user_id"].(float64))
-
-		user, err := userService.GetUserByID(userID)
-		if err != nil {
-			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-			return
-		}
-
-		c.Set("currentUser", user)
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
 	}
 }
