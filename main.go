@@ -8,7 +8,6 @@ import (
 	"crowdfund-go/graph/generated"
 	"crowdfund-go/handler"
 	"crowdfund-go/user"
-	"fmt"
 	"log"
 	"os"
 
@@ -19,20 +18,12 @@ import (
 	"gorm.io/gorm"
 )
 
-const defaultPort = ":8080"
-
 func init() {
 	config.SetConfiguration()
 }
 
 func main() {
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("DB_USER")
-	dbPasskey := os.Getenv("DB_PASSKEY")
-	dbName := os.Getenv("DB_NAME")
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPasskey, dbHost, dbPort, dbName)
+	dbHost := os.Getenv("DSN")
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)

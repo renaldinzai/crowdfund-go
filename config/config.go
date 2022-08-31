@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 func SetConfiguration() {
 	err := os.Setenv("SECRET_KEY", "")
@@ -8,27 +11,15 @@ func SetConfiguration() {
 		panic(err)
 	}
 
-	err = os.Setenv("DB_HOST", "")
-	if err != nil {
-		panic(err)
-	}
+	dbUser := ""
+	dbPasskey := ""
+	dbHost := ""
+	dbPort := ""
+	dbName := ""
 
-	err = os.Setenv("DB_PORT", "")
-	if err != nil {
-		panic(err)
-	}
+	var dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPasskey, dbHost, dbPort, dbName)
 
-	err = os.Setenv("DB_USER", "")
-	if err != nil {
-		panic(err)
-	}
-
-	err = os.Setenv("DB_PASSKEY", "")
-	if err != nil {
-		panic(err)
-	}
-
-	err = os.Setenv("DB_NAME", "")
+	err = os.Setenv("DSN", dsn)
 	if err != nil {
 		panic(err)
 	}
