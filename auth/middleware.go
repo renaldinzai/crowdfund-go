@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"crowdfund-go/helper"
 	"crowdfund-go/user"
 	"net/http"
@@ -9,6 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
+
+var userCtxKey = &contextKey{"currentUser"}
+
+type contextKey struct {
+	name string
+}
 
 func Middleware(authService Service, userService user.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -51,5 +58,14 @@ func Middleware(authService Service, userService user.Service) gin.HandlerFunc {
 		}
 
 		c.Set("currentUser", user)
+
+		ctx := context.WithValue(c.Request.Context(), userCtxKey, user)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
 	}
+}
+
+func ForContext(ctx context.Context) user.User {
+	raw, _ := ctx.Value(userCtxKey).(user.User)
+	return raw
 }

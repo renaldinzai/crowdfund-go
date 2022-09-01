@@ -1,3 +1,11 @@
+type User {
+  id: Int!
+  name: String!
+  occupation: String!
+  email: String!
+  token: String!
+}
+
 type Campaign {
   id: Int!
   user_id: Int!
@@ -11,4 +19,30 @@ type Campaign {
 
 type Query {
   campaigns(user_id: Int): [Campaign!]!
+}
+
+input NewCampaign {
+  name: String!
+  short_description: String!
+  description: String!
+  goal_amount: Int!
+  perks: String!
+}
+
+input NewUser {
+  name: String!
+  occupation: String!
+  email: String!
+  password: String!
+}
+
+input Login {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  createUser(input: NewUser!): User!
+  login(input: Login!) : String!
+  createCampaign(input: NewCampaign!) : Campaign!
 }

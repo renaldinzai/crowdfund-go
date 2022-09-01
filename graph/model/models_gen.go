@@ -12,3 +12,31 @@ type Campaign struct {
 	CurrentAmount    int    `json:"current_amount"`
 	Slug             string `json:"slug"`
 }
+
+type Login struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type NewCampaign struct {
+	Name             string `json:"name"`
+	ShortDescription string `json:"short_description"`
+	Description      string `json:"description"`
+	GoalAmount       int    `json:"goal_amount"`
+	Perks            string `json:"perks"`
+}
+
+type NewUser struct {
+	Name       string `json:"name"`
+	Occupation string `json:"occupation"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+}
+
+type User struct {
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	Occupation string `json:"occupation"`
+	Email      string `json:"email"`
+	Token      string `json:"token"`
+}

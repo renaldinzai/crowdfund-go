@@ -23,7 +23,7 @@ func init() {
 }
 
 func main() {
-	dbHost := os.Getenv("DSN")
+	dsn := os.Getenv("DSN")
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
@@ -40,6 +40,8 @@ func main() {
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 
 	router := gin.Default()
+
+	//REST
 	router.Static("/images", "./images")
 	api := router.Group("api/v1")
 
@@ -51,7 +53,8 @@ func main() {
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.POST("/campaigns", auth.Middleware(authService, userService), campaignHandler.CreateCampaign)
 
-	router.POST("/query", graphqlHandler(db))
+	//GraphQL
+	router.POST("/query", auth.Middleware(authService, userService), graphqlHandler(db))
 	router.GET("/", playgroundHandler())
 
 	router.Run()
