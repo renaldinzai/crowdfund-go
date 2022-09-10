@@ -2,8 +2,10 @@ package handler
 
 import (
 	"crowdfund-go/campaign"
+	"crowdfund-go/campaign/request"
+	"crowdfund-go/campaign/response"
+	"crowdfund-go/entity"
 	"crowdfund-go/helper"
-	"crowdfund-go/user"
 	"net/http"
 	"strconv"
 
@@ -18,24 +20,24 @@ func NewCampaignHandler(service campaign.Service) *campaignHandler {
 	return &campaignHandler{service}
 }
 
-func (h *campaignHandler) GetCampaigns(c *gin.Context) {
+func (h *campaignHandler) Campaigns(c *gin.Context) {
 	userID, _ := strconv.Atoi(c.Query("user_id"))
 
-	campaigns, err := h.service.GetCampaigns(userID)
+	campaigns, err := h.service.Campaigns(userID)
 	if err != nil {
 		response := helper.APIResponse("Error getting campaigns", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response := helper.APIResponse("List of campaigns", http.StatusOK, "success", campaign.FormatCampaigns(campaigns))
+	response := helper.APIResponse("List of campaigns", http.StatusOK, "success", response.FormatMany(campaigns))
 	c.JSON(http.StatusOK, response)
 }
 
-func (h *campaignHandler) CreateCampaign(c *gin.Context) {
-	var input campaign.CreateCampaignInput
+func (h *campaignHandler) Create(c *gin.Context) {
+	var req request.Create
 
-	err := c.ShouldBindJSON(&input)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		errors := helper.FormatErrorValidation(err)
 		errorMessage := gin.H{"errors": errors}
@@ -45,17 +47,17 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 		return
 	}
 
-	currentUser := c.MustGet("currentUser").(user.User)
+	currentUser := c.MustGet("currentUser").(entity.User)
 
-	input.User = currentUser
+	req.User = currentUser
 
-	newCampaign, err := h.service.CreateCampaign(input)
+	newCampaign, err := h.service.Create(req)
 	if err != nil {
 		response := helper.APIResponse("Failed to create campaign", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response := helper.APIResponse("Success to create campaign", http.StatusOK, "success", campaign.FormatCampaign(newCampaign))
+	response := helper.APIResponse("Success to create campaign", http.StatusOK, "success", response.Format(newCampaign))
 	c.JSON(http.StatusOK, response)
 }

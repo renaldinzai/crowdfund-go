@@ -2,12 +2,9 @@ package main
 
 import (
 	"crowdfund-go/auth"
-	"crowdfund-go/campaign"
 	"crowdfund-go/config"
 	"crowdfund-go/graph"
 	"crowdfund-go/graph/generated"
-	"crowdfund-go/handler"
-	"crowdfund-go/user"
 	"log"
 	"os"
 
@@ -16,6 +13,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	_authService "crowdfund-go/auth/service"
+	_campaignHandler "crowdfund-go/campaign/handler"
+	_campaignRepo "crowdfund-go/campaign/repository"
+	_campaignService "crowdfund-go/campaign/service"
+	_userHandler "crowdfund-go/user/handler"
+	_userRepo "crowdfund-go/user/repository"
+	_userService "crowdfund-go/user/service"
 )
 
 func init() {
@@ -29,15 +34,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	userRepository := user.NewRepository(db)
-	campaignRepository := campaign.NewRepository(db)
+	userRepository := _userRepo.NewRepository(db)
+	campaignRepository := _campaignRepo.NewRepository(db)
 
-	userService := user.NewService(userRepository)
-	authService := auth.NewService()
-	campaignService := campaign.NewService(campaignRepository)
+	userService := _userService.NewService(userRepository)
+	authService := _authService.NewService()
+	campaignService := _campaignService.NewService(campaignRepository)
 
-	userHandler := handler.NewUserHandler(userService, authService)
-	campaignHandler := handler.NewCampaignHandler(campaignService)
+	userHandler := _userHandler.NewUserHandler(userService, authService)
+	campaignHandler := _campaignHandler.NewCampaignHandler(campaignService)
 
 	router := gin.Default()
 
@@ -45,13 +50,13 @@ func main() {
 	router.Static("/images", "./images")
 	api := router.Group("api/v1")
 
-	api.POST("/users", userHandler.RegisterUser)
+	api.POST("/users", userHandler.Register)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", auth.Middleware(authService, userService), userHandler.UploadAvatar)
 
-	api.GET("/campaigns", campaignHandler.GetCampaigns)
-	api.POST("/campaigns", auth.Middleware(authService, userService), campaignHandler.CreateCampaign)
+	api.GET("/campaigns", campaignHandler.Campaigns)
+	api.POST("/campaigns", auth.Middleware(authService, userService), campaignHandler.Create)
 
 	//GraphQL
 	router.POST("/query", auth.Middleware(authService, userService), graphqlHandler(db))

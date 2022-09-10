@@ -6,27 +6,34 @@ package graph
 import (
 	"context"
 	"crowdfund-go/auth"
-	"crowdfund-go/campaign"
+	"crowdfund-go/entity"
 	"crowdfund-go/graph/generated"
 	"crowdfund-go/graph/model"
-	"crowdfund-go/user"
 	"fmt"
+
+	_authService "crowdfund-go/auth/service"
+	_campaignRepo "crowdfund-go/campaign/repository"
+	_campaignRequest "crowdfund-go/campaign/request"
+	_campaignService "crowdfund-go/campaign/service"
+	_userRepo "crowdfund-go/user/repository"
+	_userRequest "crowdfund-go/user/request"
+	_userService "crowdfund-go/user/service"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
-	repository := user.NewRepository(r.DB)
-	userService := user.NewService(repository)
-	authService := auth.NewService()
+	repository := _userRepo.NewRepository(r.DB)
+	userService := _userService.NewService(repository)
+	authService := _authService.NewService()
 
-	inputFormat := user.RegisterUserInput{
+	inputFormat := _userRequest.Register{
 		Name:       input.Name,
 		Occupation: input.Occupation,
 		Email:      input.Email,
 		Password:   input.Password,
 	}
 
-	newUser, err := userService.RegisterUser(inputFormat)
+	newUser, err := userService.Register(inputFormat)
 	if err != nil {
 		return nil, err
 	}
@@ -49,11 +56,11 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string, error) {
-	repository := user.NewRepository(r.DB)
-	userService := user.NewService(repository)
-	authService := auth.NewService()
+	repository := _userRepo.NewRepository(r.DB)
+	userService := _userService.NewService(repository)
+	authService := _authService.NewService()
 
-	inputFormat := user.LoginInput{
+	inputFormat := _userRequest.Login{
 		Email:    input.Email,
 		Password: input.Password,
 	}
@@ -73,15 +80,15 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string
 
 // CreateCampaign is the resolver for the createCampaign field.
 func (r *mutationResolver) CreateCampaign(ctx context.Context, input model.NewCampaign) (*model.Campaign, error) {
-	repository := campaign.NewRepository(r.DB)
-	service := campaign.NewService(repository)
+	repository := _campaignRepo.NewRepository(r.DB)
+	service := _campaignService.NewService(repository)
 
 	currentUser := auth.ForContext(ctx)
-	if currentUser == (user.User{}) {
+	if currentUser == (entity.User{}) {
 		return nil, fmt.Errorf("access denied")
 	}
 
-	inputFormat := campaign.CreateCampaignInput{
+	inputFormat := _campaignRequest.Create{
 		Name:             input.Name,
 		ShortDescription: input.ShortDescription,
 		Description:      input.Description,
@@ -90,7 +97,7 @@ func (r *mutationResolver) CreateCampaign(ctx context.Context, input model.NewCa
 		User:             currentUser,
 	}
 
-	newCampaign, err := service.CreateCampaign(inputFormat)
+	newCampaign, err := service.Create(inputFormat)
 	if err != nil {
 		return nil, err
 	}
@@ -110,10 +117,10 @@ func (r *mutationResolver) CreateCampaign(ctx context.Context, input model.NewCa
 // Campaigns is the resolver for the campaigns field.
 func (r *queryResolver) Campaigns(ctx context.Context, userID *int) ([]*model.Campaign, error) {
 	var result []*model.Campaign
-	repository := campaign.NewRepository(r.DB)
-	service := campaign.NewService(repository)
+	repository := _campaignRepo.NewRepository(r.DB)
+	service := _campaignService.NewService(repository)
 
-	campaigns, err := service.GetCampaigns(*userID)
+	campaigns, err := service.Campaigns(*userID)
 	if err != nil {
 		return result, err
 	}

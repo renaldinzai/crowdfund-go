@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crowdfund-go/entity"
 	"crowdfund-go/helper"
 	"crowdfund-go/user"
 	"net/http"
@@ -65,7 +66,7 @@ func Middleware(authService Service, userService user.Service) gin.HandlerFunc {
 	}
 }
 
-func ForContext(ctx context.Context) user.User {
-	raw, _ := ctx.Value(userCtxKey).(user.User)
+func ForContext(ctx context.Context) entity.User {
+	raw, _ := ctx.Value(userCtxKey).(entity.User)
 	return raw
 }

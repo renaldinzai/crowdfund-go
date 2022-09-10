@@ -1,6 +1,8 @@
-package campaign
+package repository
 
 import (
+	"crowdfund-go/entity"
+
 	"regexp"
 	"testing"
 	"time"
@@ -16,8 +18,8 @@ func TestFindAll(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	mocks := []Campaign{
-		Campaign{
+	mocks := []entity.Campaign{
+		entity.Campaign{
 			ID:               1,
 			UserID:           1,
 			Name:             "Campaign 1",
@@ -31,7 +33,7 @@ func TestFindAll(t *testing.T) {
 			CreatedAt:        time.Now(),
 			UpdatedAt:        time.Now(),
 		},
-		Campaign{
+		entity.Campaign{
 			ID:               2,
 			UserID:           2,
 			Name:             "Campaign 2",
@@ -83,8 +85,8 @@ func TestFindByUserID(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	mocks := []Campaign{
-		Campaign{
+	mocks := []entity.Campaign{
+		entity.Campaign{
 			ID:               1,
 			UserID:           1,
 			Name:             "Campaign 1",
@@ -100,8 +102,8 @@ func TestFindByUserID(t *testing.T) {
 		},
 	}
 
-	imageMocks := []CampaignImage{
-		CampaignImage{
+	imageMocks := []entity.CampaignImage{
+		entity.CampaignImage{
 			ID:         1,
 			CampaignID: 1,
 			FileName:   "image-1",
@@ -109,7 +111,7 @@ func TestFindByUserID(t *testing.T) {
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 		},
-		CampaignImage{
+		entity.CampaignImage{
 			ID:         2,
 			CampaignID: 1,
 			FileName:   "image-2",

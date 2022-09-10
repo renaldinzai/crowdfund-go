@@ -2,8 +2,11 @@ package handler
 
 import (
 	"crowdfund-go/auth"
+	"crowdfund-go/entity"
 	"crowdfund-go/helper"
 	"crowdfund-go/user"
+	"crowdfund-go/user/request"
+	"crowdfund-go/user/response"
 	"fmt"
 	"net/http"
 
@@ -19,10 +22,10 @@ func NewUserHandler(userService user.Service, authService auth.Service) *userHan
 	return &userHandler{userService, authService}
 }
 
-func (h *userHandler) RegisterUser(c *gin.Context) {
-	var input user.RegisterUserInput
+func (h *userHandler) Register(c *gin.Context) {
+	var req request.Register
 
-	err := c.ShouldBindJSON(&input)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		errors := helper.FormatErrorValidation(err)
 		errorMessage := gin.H{"errors": errors}
@@ -32,7 +35,7 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	newUser, err := h.userService.RegisterUser(input)
+	newUser, err := h.userService.Register(req)
 	if err != nil {
 		response := helper.APIResponse("Register account failed", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
@@ -46,7 +49,7 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	formatter := user.FormatUser(newUser, token)
+	formatter := response.Format(newUser, token)
 
 	response := helper.APIResponse("Account has been registered", http.StatusOK, "success", formatter)
 
@@ -54,9 +57,9 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 }
 
 func (h *userHandler) Login(c *gin.Context) {
-	var input user.LoginInput
+	var req request.Login
 
-	err := c.ShouldBindJSON(&input)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		errors := helper.FormatErrorValidation(err)
 		errorMessage := gin.H{"errors": errors}
@@ -66,7 +69,7 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
-	loggedinUser, err := h.userService.Login(input)
+	loggedinUser, err := h.userService.Login(req)
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
 
@@ -82,7 +85,7 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
-	formatter := user.FormatUser(loggedinUser, token)
+	formatter := response.Format(loggedinUser, token)
 
 	response := helper.APIResponse("Logged in!", http.StatusOK, "success", formatter)
 
@@ -90,9 +93,9 @@ func (h *userHandler) Login(c *gin.Context) {
 }
 
 func (h *userHandler) CheckEmailAvailability(c *gin.Context) {
-	var input user.CheckEmailInput
+	var req request.CheckEmail
 
-	err := c.ShouldBindJSON(&input)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		errors := helper.FormatErrorValidation(err)
 		errorMessage := gin.H{"errors": errors}
@@ -102,7 +105,7 @@ func (h *userHandler) CheckEmailAvailability(c *gin.Context) {
 		return
 	}
 
-	isEmailAvailable, err := h.userService.IsEmailAvailable(input)
+	isEmailAvailable, err := h.userService.IsEmailAvailable(req)
 	if err != nil {
 		errorMessage := gin.H{"errors": "Server error"}
 		response := helper.APIResponse("Email checking failed!", http.StatusUnprocessableEntity, "error", errorMessage)
@@ -138,7 +141,7 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	currentUser := c.MustGet("currentUser").(user.User)
+	currentUser := c.MustGet("currentUser").(entity.User)
 	userID := currentUser.ID
 
 	path := fmt.Sprintf("images/%d-%s", userID, file.Filename)

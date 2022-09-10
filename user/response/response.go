@@ -1,6 +1,8 @@
-package user
+package response
 
-type UserFormatter struct {
+import "crowdfund-go/entity"
+
+type User struct {
 	ID         int    `json:"id"`
 	Name       string `json:"name"`
 	Occupation string `json:"occupation"`
@@ -8,8 +10,8 @@ type UserFormatter struct {
 	Token      string `json:"token"`
 }
 
-func FormatUser(user User, token string) UserFormatter {
-	formatter := UserFormatter{
+func Format(user entity.User, token string) User {
+	formatted := User{
 		ID:         user.ID,
 		Name:       user.Name,
 		Occupation: user.Occupation,
@@ -17,5 +19,5 @@ func FormatUser(user User, token string) UserFormatter {
 		Token:      token,
 	}
 
-	return formatter
+	return formatted
 }
